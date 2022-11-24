@@ -60,6 +60,21 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/seller/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isSeller: user?.role === "seller" });
+    });
+
+    app.get("/dbuser", async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const query = { email: email };
+      const dbuser = await usersCollection.findOne(query);
+      res.send(dbuser);
+    });
+
     //02.Get Google Phones
     app.get("/google", async (req, res) => {
       const query = {};
