@@ -138,6 +138,15 @@ async function run() {
       const result = await productsCollection.insertOne(product);
       res.send(result);
     });
+
+    app.get("/myproducts", async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const query = { sellerEmail: email };
+      const products = await bookingsCollection.find(query).toArray();
+      console.log(products);
+      res.send(products);
+    });
   } finally {
   }
 }
