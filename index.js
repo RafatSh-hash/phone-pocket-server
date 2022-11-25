@@ -38,6 +38,16 @@ async function run() {
     const productsCollection = client.db("phonepocket").collection("products");
     const bookingsCollection = client.db("phonepocket").collection("bookings");
 
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "admin") {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      next();
+    };
+
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
@@ -66,7 +76,7 @@ async function run() {
     };
 
     //01.Save Users Via Role
-    app.post("/users", async (req, res) => {
+    app.put("/users", async (req, res) => {
       const user = req.body;
 
       const result = await usersCollection.insertOne(user);
@@ -78,6 +88,15 @@ async function run() {
       const query = { email };
       const user = await usersCollection.findOne(query);
       res.send({ isSeller: user?.role === "seller" });
+    });
+
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+
+      const user = await usersCollection.findOne(query);
+
+      res.send({ isAdmin: user?.role === "admin" });
     });
 
     app.get("/dbuser", async (req, res) => {
@@ -145,7 +164,7 @@ async function run() {
       res.send(orders);
     });
 
-    app.put("/products", async (req, res) => {
+    app.put("/products", verifySeller, async (req, res) => {
       const product = req.body;
       console.log(product);
       const result = await productsCollection.insertOne(product);
@@ -158,6 +177,19 @@ async function run() {
       const query = { sellerEmail: email };
       const products = await productsCollection.find(query).toArray();
       res.send(products);
+    });
+
+    app.get("/users", async (req, res) => {
+      const query = { role: "user" };
+      const users = await usersCollection.find(query).toArray();
+      //   console.log(users);
+      res.send(users);
+    });
+    app.get("/sellers", async (req, res) => {
+      const query = { role: "seller" };
+      const sellers = await usersCollection.find(query).toArray();
+      console.log(sellers);
+      res.send(sellers);
     });
   } finally {
   }
