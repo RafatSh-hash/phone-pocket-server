@@ -69,7 +69,6 @@ async function run() {
 
     app.get("/dbuser", async (req, res) => {
       const email = req.query.email;
-      console.log(email);
       const query = { email: email };
       const dbuser = await usersCollection.findOne(query);
       res.send(dbuser);
@@ -122,7 +121,6 @@ async function run() {
 
     app.post("/bookings", (req, res) => {
       const booking = req.body;
-      console.log(booking);
       const result = bookingsCollection.insertOne(booking);
       res.send(result);
     });
@@ -132,6 +130,13 @@ async function run() {
       const query = { email: email };
       const orders = await bookingsCollection.find(query).toArray();
       res.send(orders);
+    });
+
+    app.put("/products", verifyJWT, async (req, res) => {
+      const product = req.body;
+      console.log(product);
+      const result = await productsCollection.insertOne(product);
+      res.send(result);
     });
   } finally {
   }
