@@ -52,6 +52,19 @@ async function run() {
       res.status(403).send({ accessToken: "" });
     });
 
+    const verifySeller = async (req, res, next) => {
+      const decodedEmail = req.query.email;
+      console.log(decodedEmail);
+      const query = { email: decodedEmail };
+
+      const user = await usersCollection.findOne(query);
+      console.log(user);
+      if (user?.role !== "seller") {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      next();
+    };
+
     //01.Save Users Via Role
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -132,19 +145,18 @@ async function run() {
       res.send(orders);
     });
 
-    app.put("/products", verifyJWT, async (req, res) => {
+    app.put("/products", async (req, res) => {
       const product = req.body;
       console.log(product);
       const result = await productsCollection.insertOne(product);
       res.send(result);
     });
 
-    app.get("/myproducts", async (req, res) => {
+    app.get("/myproducts", verifySeller, async (req, res) => {
       const email = req.query.email;
       console.log(email);
       const query = { sellerEmail: email };
       const products = await productsCollection.find(query).toArray();
-      console.log(products);
       res.send(products);
     });
   } finally {
