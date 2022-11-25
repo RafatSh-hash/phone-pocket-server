@@ -5,6 +5,7 @@ const port = process.env.PORT || 1000;
 const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const { ObjectID, ObjectId } = require("bson");
 
 app.use(cors());
 app.use(express.json());
@@ -190,6 +191,14 @@ async function run() {
       const sellers = await usersCollection.find(query).toArray();
       console.log(sellers);
       res.send(sellers);
+    });
+
+    app.delete("/sellers/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      console.log(query);
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
     });
   } finally {
   }
