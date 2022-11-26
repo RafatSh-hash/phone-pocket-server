@@ -39,6 +39,9 @@ async function run() {
     const usersCollection = client.db("phonepocket").collection("users");
     const productsCollection = client.db("phonepocket").collection("products");
     const bookingsCollection = client.db("phonepocket").collection("bookings");
+    const advertiseCollection = client
+      .db("phonepocket")
+      .collection("advertises");
 
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -120,6 +123,7 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const dbuser = await usersCollection.findOne(query);
+      console.log(dbuser);
       res.send(dbuser);
     });
 
@@ -190,36 +194,45 @@ async function run() {
 
     app.post("/products", verifySeller, async (req, res) => {
       const product = req.body;
-      console.log(product);
       const result = await productsCollection.insertOne(product);
       res.send(result);
     });
 
     app.get("/myproducts", async (req, res) => {
       const email = req.query.email;
-      console.log(email);
       const query = { sellerEmail: email };
       const products = await productsCollection.find(query).toArray();
+      res.send(products);
+    });
+
+    app.post("/advertise", async (req, res) => {
+      const product = req.body;
+      console.log(product);
+      const result = await advertiseCollection.insertOne(product);
+      res.send(result);
+    });
+
+    app.get("/advertisedproducts", async (req, res) => {
+      const query = {};
+      const products = await advertiseCollection.find(query).toArray();
+      console.log(products);
       res.send(products);
     });
 
     app.get("/users", async (req, res) => {
       const query = { role: "user" };
       const users = await usersCollection.find(query).toArray();
-      //   console.log(users);
       res.send(users);
     });
     app.get("/sellers", async (req, res) => {
       const query = { role: "seller" };
       const sellers = await usersCollection.find(query).toArray();
-      console.log(sellers);
       res.send(sellers);
     });
 
     app.delete("/sellers/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
-      console.log(query);
       const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
