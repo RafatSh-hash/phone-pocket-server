@@ -39,6 +39,7 @@ async function run() {
     const usersCollection = client.db("phonepocket").collection("users");
     const productsCollection = client.db("phonepocket").collection("products");
     const bookingsCollection = client.db("phonepocket").collection("bookings");
+    const wishCollection = client.db("phonepocket").collection("wishlist");
     const advertiseCollection = client
       .db("phonepocket")
       .collection("advertises");
@@ -98,7 +99,6 @@ async function run() {
     //01.Save Users Via Role
     app.put("/users", async (req, res) => {
       const user = req.body;
-
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
@@ -178,6 +178,20 @@ async function run() {
       res.send(result);
     });
 
+    app.put("/wishlist", verifyJWT, async (req, res) => {
+      const product = req.body;
+      const result = await wishCollection.insertOne(product);
+      res.send(result);
+    });
+
+    app.get("/mywishes", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const wishes = await wishCollection.find(query).toArray();
+      console.log(wishes);
+      res.send(wishes);
+    });
+
     app.get("/myorders", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
@@ -207,7 +221,6 @@ async function run() {
 
     app.post("/advertise", async (req, res) => {
       const product = req.body;
-      console.log(product);
       const result = await advertiseCollection.insertOne(product);
       res.send(result);
     });
@@ -215,7 +228,6 @@ async function run() {
     app.get("/advertisedproducts", async (req, res) => {
       const query = {};
       const products = await advertiseCollection.find(query).toArray();
-      console.log(products);
       res.send(products);
     });
 
