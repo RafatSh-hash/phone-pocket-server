@@ -6,6 +6,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { ObjectID, ObjectId } = require("bson");
+const { query } = require("express");
 
 app.use(cors());
 app.use(express.json());
@@ -39,16 +40,6 @@ async function run() {
     const productsCollection = client.db("phonepocket").collection("products");
     const bookingsCollection = client.db("phonepocket").collection("bookings");
 
-    const verifyAdmin = async (req, res, next) => {
-      const decodedEmail = req.decoded.email;
-      const query = { email: decodedEmail };
-      const user = await usersCollection.findOne(query);
-      if (user?.role !== "admin") {
-        return res.status(403).send({ message: "Forbidden access" });
-      }
-      next();
-    };
-
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
@@ -63,14 +54,39 @@ async function run() {
       res.status(403).send({ accessToken: "" });
     });
 
+    const verifyJWT = (req, res, next) => {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).send("Unauthorized Access");
+      }
+      const token = authHeader.split(" ")[1];
+
+      jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+        req.decoded = decoded;
+        next();
+      });
+    };
+
     const verifySeller = async (req, res, next) => {
-      const decodedEmail = req.query.email;
+      const decodedEmail = req.body.sellerEmail;
       console.log(decodedEmail);
       const query = { email: decodedEmail };
-
+      console.log(query);
       const user = await usersCollection.findOne(query);
       console.log(user);
       if (user?.role !== "seller") {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      next();
+    };
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "admin") {
         return res.status(403).send({ message: "Forbidden access" });
       }
       next();
@@ -165,14 +181,21 @@ async function run() {
       res.send(orders);
     });
 
-    app.put("/products", verifySeller, async (req, res) => {
+    app.delete("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await productsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.post("/products", verifySeller, async (req, res) => {
       const product = req.body;
       console.log(product);
       const result = await productsCollection.insertOne(product);
       res.send(result);
     });
 
-    app.get("/myproducts", verifySeller, async (req, res) => {
+    app.get("/myproducts", async (req, res) => {
       const email = req.query.email;
       console.log(email);
       const query = { sellerEmail: email };
@@ -193,7 +216,7 @@ async function run() {
       res.send(sellers);
     });
 
-    app.delete("/sellers/:id", verifyJWT, verifyJWT, async (req, res) => {
+    app.delete("/sellers/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       console.log(query);
