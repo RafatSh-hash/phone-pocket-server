@@ -242,17 +242,31 @@ async function run() {
       res.send(sellers);
     });
 
-    app.delete("/sellers/:id", verifyJWT, async (req, res) => {
+    app.delete("/sellers/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
 
-    app.delete("/users/:id", verifyJWT, verifyJWT, async (req, res) => {
+    app.delete("/users/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.put("/sellers/verify/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          status: "verified",
+        },
+      };
+      const result = usersCollection.updateOne(filter, updatedDoc, options);
       res.send(result);
     });
   } finally {
