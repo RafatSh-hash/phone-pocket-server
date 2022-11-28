@@ -5,7 +5,7 @@ const port = process.env.PORT || 1000;
 const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const { ObjectID, ObjectId } = require("bson");
+const { ObjectId } = require("bson");
 const { query } = require("express");
 
 app.use(cors());
@@ -60,11 +60,8 @@ async function run() {
 
     const verifySeller = async (req, res, next) => {
       const decodedEmail = req.body.sellerEmail;
-      console.log(decodedEmail);
       const query = { email: decodedEmail };
-      console.log(query);
       const user = await usersCollection.findOne(query);
-      console.log(user);
       if (user?.role !== "seller") {
         return res.status(403).send({ message: "Forbidden access" });
       }
@@ -107,7 +104,6 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const dbuser = await usersCollection.findOne(query);
-      console.log(dbuser);
       res.send(dbuser);
     });
 
@@ -172,7 +168,6 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const wishes = await wishCollection.find(query).toArray();
-      console.log(wishes);
       res.send(wishes);
     });
 
@@ -242,7 +237,6 @@ async function run() {
 
     app.put("/sellers/verify/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true };
       const updatedDoc = {
